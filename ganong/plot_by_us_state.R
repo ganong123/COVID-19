@@ -1,4 +1,5 @@
 library(tidyverse)
+library(lubridate)
 
 path <- "csse_covid_19_data/csse_covid_19_daily_reports/03-"
 
@@ -22,6 +23,8 @@ read_month <- function(state) {
 
 df <- c("New York", "Illinois", "Washington", "Florida") %>%
   map_dfr(read_month)
+
+write_csv(df, "ganong/2020_03_25_state_counts.csv")
 
 (df %>%
   ggplot(aes(x = day, y = n, group = state, color = state)) +
