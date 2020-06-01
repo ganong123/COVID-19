@@ -3,29 +3,27 @@ library(lubridate)
 
 path <- "csse_covid_19_data/csse_covid_19_daily_reports/03-"
 
-read_day <- function(date, state, var_name_) {
-  #this function extracts data for one day and state
-  var_name <- enquo(var_name_)
-  read_csv(str_c(path, date, "-2020.csv")) %>%
-    filter(!! var_name == state) %>%
+count_cases_one_day <- function(day_of_month, state, var_name) {
+  read_csv(str_c(path, day_of_month, "-2020.csv")) %>%
+    filter({{var_name}} == state) %>%
     summarise(n = sum(Confirmed)) %>%
-    mutate(day = dmy(str_c(date, " March 2020")))
+    mutate(day = dmy(str_c(day_of_month, " March 2020")))
 }
 
-read_all_days <- function(state) {
-  #this function uses read_day to extract data from March 10 forward
+count_cases_all_days <- function(state) {
+  #this function uses count_cases_one_day to extract data from March 10 forward
   #Why not earlier than March 10?
   #assembling state-level data for days before requires further data cleaning
   bind_rows(
-    seq(10, 21) %>% map_dfr(read_day, state, `Province/State`),
-    seq(22, 25) %>% map_dfr(read_day, state, Province_State)
+    seq(10, 21) %>% map_dfr(count_cases_one_day, state, `Province/State`),
+    seq(22, 25) %>% map_dfr(count_cases_one_day, state, Province_State)
   ) %>%
     mutate(state = state)
 }
 
 cases_daily_4state <-
   c("New York", "Illinois", "Washington", "Florida") %>%
-  map_dfr(read_all_days)
+  map_dfr(count_cases_all_days)
 
 write_csv(cases_daily_4state, "ganong/2020_03_25_state_counts.csv")
 
